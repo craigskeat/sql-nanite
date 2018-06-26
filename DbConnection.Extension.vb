@@ -21,6 +21,21 @@ Partial Public Module DbConnectionExtension
     End Function
 
     ''' <summary>
+    ''' Executes an SQL statement against the Connection object of a .NET Framework data provider, and returns the number of rows affected.
+    ''' </summary>
+    ''' <param name="Con">Connection.</param>
+    ''' <param name="CommandText">SQL Command Text.</param>
+    ''' <returns></returns>
+    <Extension>
+    Function ExecuteNonQuery(ByRef Con As IDbConnection, ParamArray CommandTexts() As String) As List(Of Integer)
+        ExecuteNonQuery = New List(Of Integer)
+        Using Cmd = Con.CreateCommand() : With Cmd : For Each CommandText In CommandTexts
+                    .CommandText = CommandText
+                    ExecuteNonQuery.Add(.ExecuteNonQuery())
+                Next : End With : End Using
+    End Function
+
+    ''' <summary>
     ''' Executes the query, and returns the first column of the first row in the resultset returned by the query. Extra columns or rows are ignored.
     ''' </summary>
     ''' <param name="Con">Connection.</param>
@@ -85,7 +100,7 @@ Partial Public Module DbConnectionExtension
     End Function
 
     ''' <summary>
-    ''' Load Serialized Data
+    ''' Load Serialized Data (From File)
     ''' </summary>
     ''' <typeparam name="T"></typeparam>
     ''' <param name="Con"></param>
@@ -96,6 +111,28 @@ Partial Public Module DbConnectionExtension
         Dim sr As New XmlSerializer(GetType(List(Of T)))
         Using fs As New FileStream(FilePath, FileMode.Open)
             List = sr.Deserialize(fs)
+        End Using
+
+        For Each Item In List
+            Item.MergeInto(Con)
+        Next
+    End Sub
+
+    ''' <summary>
+    ''' Load Serialized Data (From Manifest Resource)
+    ''' </summary>
+    ''' <typeparam name="T"></typeparam>
+    ''' <param name="Con"></param>
+    <Extension>
+    Public Sub LoadXmlData(Of T)(ByRef Con As IDbConnection)
+        Dim List As List(Of T)
+        Dim sr As New XmlSerializer(GetType(List(Of T)))
+        Dim ManiKey = $"{GetType(T).FullName}.xml"
+
+        If Not GetType(T).Assembly.GetManifestResourceNames.Contains(ManiKey) Then Exit Sub
+
+        Using str = GetType(T).Assembly.GetManifestResourceStream(ManiKey)
+            List = sr.Deserialize(str)
         End Using
 
         For Each Item In List
@@ -121,12 +158,10 @@ Partial Public Module DbConnectionExtension
     ''' <returns></returns>
     <Extension>
     Public Function DropAllTables(ByRef Con As IDbConnection) As (Phase1 As Integer, Phase2 As Integer)
-        Using Cmd = Con.CreateCommand : With Cmd
-                .CommandText = "EXEC sp_MSForEachTable 'ALTER TABLE ? NOCHECK CONSTRAINT ALL'"
-                DropAllTables.Phase1 = .ExecuteNonQuery()
-                .CommandText = "EXEC sp_MSForEachTable @command1 = ""DROP TABLE ?"""
-                DropAllTables.Phase2 = .ExecuteNonQuery()
-            End With ： End Using
+        Dim Result = Con.ExecuteNonQuery("EXEC sp_MSForEachTable 'ALTER TABLE ? NOCHECK CONSTRAINT ALL'",
+                                         "EXEC sp_MSForEachTable @command1 = ""DROP TABLE ?""")
+        DropAllTables.Phase1 = Result(0)
+        DropAllTables.Phase2 = Result(1)
     End Function
 
     ''' <summary>
