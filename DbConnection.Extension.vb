@@ -147,8 +147,12 @@ Partial Public Module DbConnectionExtension
     ''' <param name="Con"></param>
     ''' <returns></returns>
     <Extension>
-    Function CreateTable(Of T)(ByRef Con As IDbConnection)
-        Return Con.ExecuteNonQuery(SqlNanite(Of T).GetCreateTableScript())
+    Function CreateTable(Of T)(ByRef Con As IDbConnection) As (Phase1 As Integer, Phase2 As Integer)
+        Dim Result = Con.ExecuteNonQuery(
+            SqlNanite(Of T).GetCreateSchemaScript(),
+            SqlNanite(Of T).GetCreateTableScript())
+        CreateTable.Phase1 = Result(0)
+        CreateTable.Phase2 = Result(1)
     End Function
 
     ''' <summary>
@@ -158,8 +162,9 @@ Partial Public Module DbConnectionExtension
     ''' <returns></returns>
     <Extension>
     Public Function DropAllTables(ByRef Con As IDbConnection) As (Phase1 As Integer, Phase2 As Integer)
-        Dim Result = Con.ExecuteNonQuery("EXEC sp_MSForEachTable 'ALTER TABLE ? NOCHECK CONSTRAINT ALL'",
-                                         "EXEC sp_MSForEachTable @command1 = ""DROP TABLE ?""")
+        Dim Result = Con.ExecuteNonQuery(
+            "EXEC sp_MSForEachTable 'ALTER TABLE ? NOCHECK CONSTRAINT ALL'",
+            "EXEC sp_MSForEachTable @command1 = ""DROP TABLE ?""")
         DropAllTables.Phase1 = Result(0)
         DropAllTables.Phase2 = Result(1)
     End Function
