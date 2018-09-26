@@ -35,8 +35,26 @@ Public Module PropertyInfoExtension
                     t = $"[{P.GetCustomAttributeProperty(Of ColumnAttribute)("TypeName", "DATETIME")}]"
                 Case GetType(String)
                     Dim CT = P.GetCustomAttributeProperty(Of ColumnAttribute)("TypeName", "NVARCHAR")
-                    Dim CL = P.GetCustomAttributeProperty(Of StringLengthAttribute)("MaximumLength", "")
-                    t = IIf（String.IsNullOrEmpty(CL), $"[{CT}]", $"[{CT}]({CL})"）
+                    Dim CL = P.GetCustomAttributeProperty(Of StringLengthAttribute)("MaximumLength"， "")
+                    If Not String.IsNullOrEmpty(CL) Then
+                        t = $"[{CT}]({CL})"
+                    Else
+                        t = $"[{CT}]"
+                    End If
+                Case GetType(Guid)
+                    t = $"[UNIQUEIDENTIFIER]"
+                Case GetType(Boolean)
+                    t = $"[BIT]"
+                Case GetType(Byte)
+                    t = $"[TINYINT]"
+                Case GetType（DateTimeOffset)
+                    t = $"[DATETIMEOFFSET]"
+                Case GetType(Long)
+                    t = "[BIGINT]"
+                Case GetType(Byte())
+                    Dim CT = UCase(P.GetCustomAttributeProperty(Of ColumnAttribute)("TypeName"))
+                    If CT = "IMAGE" Then t = "[IMAGE]" _
+                    Else Throw New NotSupportedException(P.PropertyType.ToString)
                 Case Else
                     Throw New NotSupportedException(P.PropertyType.ToString)
             End Select
@@ -110,7 +128,7 @@ Public Module PropertyInfoExtension
     ''' <param name="DefaultValue"></param>
     ''' <returns></returns>
     <Extension>
-    Friend Function GetCustomAttributeProperty(Of TAttribute As Attribute)(ByRef P As PropertyInfo, AttributePropertyName As String, Optional DefaultValue As String = "")
+    Friend Function GetCustomAttributeProperty(Of TAttribute As Attribute)(ByRef P As PropertyInfo, AttributePropertyName As String, Optional DefaultValue As String = "") As Object
         Dim Attrib = P.GetCustomAttribute(GetType(TAttribute))
         If Attrib Is Nothing Then Return DefaultValue
         GetCustomAttributeProperty = GetType(TAttribute).InvokeMember(AttributePropertyName, BindingFlags.GetProperty, Nothing, Attrib, Nothing)
