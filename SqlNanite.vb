@@ -54,12 +54,8 @@ Partial Public Class SqlNanite(Of TEntity)
     ''' <returns></returns>
     Friend Shared Function GetPrimaryKeyScript() As String
         Dim Ps = GetType(TEntity).GetProperties.Where(Function(P) Not P.GetCustomAttribute(Of KeyAttribute) Is Nothing).ToList
-
         Dim cs = Ps.Select(Function(P) New With {.ColName = P.Name, .Key1 = P.GetCustomAttribute(Of KeyAttribute)})
-
-
         GetPrimaryKeyScript = $"CONSTRAINT [PK__{GetTableName("{1}")}_{cs.Select(Function(c) c.ColName).Join("_")}] PRIMARY KEY ({cs.Select(Function(c) $"[{c.ColName}]").Join(", ")})"
-
     End Function
 
     ''' <summary>
@@ -99,6 +95,11 @@ Partial Public Class SqlNanite(Of TEntity)
             $"INSERT({FormatColumns("[{PN}]").Join(CommaWithNewLineIndent)})" & NewLine &
             $"VALUES({FormatColumns($"[{SourceAlias}].[{{PN}}]").Join(CommaWithNewLineIndent)});"
     End Function
+
+    Public Shared Function GetCreateSchemaScript() As String
+        GetCreateSchemaScript = $"if (schema_id(N'{GetTableName("{0}")}') is null) exec(N'create schema [{GetTableName("{0}")}]');"
+    End Function
+
 
     ''' <summary>
     ''' Get Delete From Script

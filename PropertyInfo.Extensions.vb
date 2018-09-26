@@ -17,14 +17,26 @@ Public Module PropertyInfoExtension
             Dim t As String
 
             Select Case PT
+                Case GetType(DateTimeOffset)
+                    t = "datetimeoffset"
+                Case GetType(Byte)
+                    t = "tinyint"
+                Case GetType(Byte())
+                    t = "binary"
+                Case GetType(Boolean)
+                    t = "bit"
+                Case GetType(Guid)
+                    t = $"uniqueidentifier"
+                Case GetType(Long)
+                    t = $"[bigint]"
                 Case GetType(Integer)
                     t = $"[INT]"
-                Case GetType(DateTime)
+                Case GetType(Date)
                     t = $"[{P.GetCustomAttributeProperty(Of ColumnAttribute)("TypeName", "DATETIME")}]"
                 Case GetType(String)
                     Dim CT = P.GetCustomAttributeProperty(Of ColumnAttribute)("TypeName", "NVARCHAR")
-                    Dim CL = P.GetCustomAttributeProperty(Of StringLengthAttribute)("MaximumLength", "MAX")
-                    t = $"[{CT}]({CL})"
+                    Dim CL = P.GetCustomAttributeProperty(Of StringLengthAttribute)("MaximumLength", "")
+                    t = IIf（String.IsNullOrEmpty(CL), $"[{CT}]", $"[{CT}]({CL})"）
                 Case Else
                     Throw New NotSupportedException(P.PropertyType.ToString)
             End Select
