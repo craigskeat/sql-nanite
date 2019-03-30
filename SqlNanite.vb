@@ -53,9 +53,9 @@ Partial Public Class SqlNanite(Of TEntity)
     ''' </summary>
     ''' <returns></returns>
     Friend Shared Function GetPrimaryKeyScript() As String
-        Dim Ps = GetType(TEntity).GetProperties.Where(Function(P) Not P.GetCustomAttribute(Of KeyAttribute) Is Nothing).ToList
-        Dim cs = Ps.Select(Function(P) New With {.ColName = P.Name, .Key1 = P.GetCustomAttribute(Of KeyAttribute)})
-        GetPrimaryKeyScript = $"CONSTRAINT [PK__{GetTableName("{1}")}_{cs.Select(Function(c) c.ColName).Join("_")}] PRIMARY KEY ({cs.Select(Function(c) $"[{c.ColName}]").Join(", ")})"
+        Dim cs = GetType(TEntity).GetProperties.Where(Function(P) Not P.GetCustomAttribute(Of KeyAttribute) Is Nothing).ToList _
+            .Select(Function(P) New With {.ColName = P.Name, .Key1 = P.GetCustomAttribute(Of KeyAttribute)})
+        GetPrimaryKeyScript = $"CONSTRAINT [PK__{GetTableName("{1}")}__{cs.Select(Function(c) c.ColName).Join("__")}] PRIMARY KEY ({cs.Select(Function(c) $"[{c.ColName}]").Join(", ")})"
     End Function
 
     ''' <summary>
@@ -97,7 +97,12 @@ Partial Public Class SqlNanite(Of TEntity)
     End Function
 
     Public Shared Function GetCreateSchemaScript() As String
-        GetCreateSchemaScript = $"if (schema_id(N'{GetTableName("{0}")}') is null) exec(N'create schema [{GetTableName("{0}")}]');"
+        Dim SchemaName = GetTableName("{0}")
+        If Not String.IsNullOrEmpty(SchemaName) Then
+            GetCreateSchemaScript = $"if (schema_id(N'{SchemaName}') is null) exec(N'create schema [{SchemaName}]');"
+        Else
+            GetCreateSchemaScript = ";"
+        End If
     End Function
 
 
@@ -115,7 +120,7 @@ Partial Public Class SqlNanite(Of TEntity)
     ''' </summary>
     ''' <returns></returns>
     Public Shared Function GetCreateTableScript() As String
-        GetCreateTableScript = $"CREATE TABLE {GetTableName()} ({vbNewLine}{String.Join($",{vbNewLine}    ", FormatColumns("[{PN}] {PT}").Union({GetPrimaryKeyScript()}))})"
+        GetCreateTableScript = $"CREATE TABLE {GetTableName()} ({vbNewLine}    {String.Join($",{vbNewLine}    ", FormatColumns("[{PN}] {PT} {NN}").Union({GetPrimaryKeyScript()}))}{vbNewLine})"
     End Function
 
     ''' <summary>
@@ -133,7 +138,6 @@ Partial Public Class SqlNanite(Of TEntity)
     Public Shared Function GetTruncateTableScript() As String
         GetTruncateTableScript = $"TRUNCATE TABLE {GetTableName()}"
     End Function
-
 
 End Class
 

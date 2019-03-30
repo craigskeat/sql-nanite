@@ -18,17 +18,17 @@ Public Module PropertyInfoExtension
 
             Select Case PT
                 Case GetType(DateTimeOffset)
-                    t = "datetimeoffset"
+                    t = "[DATETIMEOFFSET]"
                 Case GetType(Byte)
-                    t = "tinyint"
+                    t = "[TINYINT]"
                 Case GetType(Byte())
-                    t = "binary"
+                    t = "[BINARY]"
                 Case GetType(Boolean)
-                    t = "bit"
+                    t = "[BIT]"
                 Case GetType(Guid)
-                    t = $"uniqueidentifier"
+                    t = $"[UNIQUEIDENTIFIER]"
                 Case GetType(Long)
-                    t = $"[bigint]"
+                    t = $"[BIGINT]"
                 Case GetType(Integer)
                     t = $"[INT]"
                 Case GetType(Date)
@@ -41,16 +41,6 @@ Public Module PropertyInfoExtension
                     Else
                         t = $"[{CT}]"
                     End If
-                Case GetType(Guid)
-                    t = $"[UNIQUEIDENTIFIER]"
-                Case GetType(Boolean)
-                    t = $"[BIT]"
-                Case GetType(Byte)
-                    t = $"[TINYINT]"
-                Case GetType（DateTimeOffset)
-                    t = $"[DATETIMEOFFSET]"
-                Case GetType(Long)
-                    t = "[BIGINT]"
                 Case GetType(Byte())
                     Dim CT = UCase(P.GetCustomAttributeProperty(Of ColumnAttribute)("TypeName"))
                     If CT = "IMAGE" Then t = "[IMAGE]" _
@@ -90,7 +80,7 @@ Public Module PropertyInfoExtension
     <Extension>
     Public Function FormatColumn(Of TEntity)(P As PropertyInfo, Fmt As String, Optional Entity As TEntity = Nothing) As String
 
-        Dim PN As String = Nothing, PC As Type = Nothing, PT As String = Nothing, PV As Object = Nothing
+        Dim PN As String = Nothing, PC As Type = Nothing, PT As String = Nothing, PV As Object = Nothing, NN As String = Nothing
 
         If Fmt.Contains("{PN}") Then PN = P.Name
         If Fmt.Contains("{PC}") Then PC = P.PropertyType
@@ -112,10 +102,13 @@ Public Module PropertyInfoExtension
                 End Select
             End If
         End If
+        If Fmt.Contains("{NN}") Then _
+            NN = IIf(Not IsNothing(P.GetCustomAttribute(Of KeyAttribute)) OrElse
+                     Not IsNothing(P.GetCustomAttribute(Of RequiredAttribute)), "NOT ", String.Empty) & "NULL"
 
-        Fmt = Fmt.Replace("{PN}", "{0}").Replace("{PC}", "{1}").Replace("{PT}", "{2}").Replace("{PV}", "{3}")
+        Fmt = Fmt.Replace("{PN}", "{0}").Replace("{PC}", "{1}").Replace("{PT}", "{2}").Replace("{PV}", "{3}").Replace("{NN}", "{4}")
 
-        Return String.Format(Fmt, PN, PC, PT, PV)
+        Return String.Format(Fmt, PN, PC, PT, PV, NN)
 
     End Function
 
