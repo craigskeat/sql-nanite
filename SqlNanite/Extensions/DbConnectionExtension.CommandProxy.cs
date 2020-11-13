@@ -1,8 +1,6 @@
-﻿using System.Data.Common;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 
-namespace Craig.Data.Extensions
+namespace System.Data.Common
 {
     public static partial class DbConnectionExtension
     {
@@ -31,7 +29,7 @@ namespace Craig.Data.Extensions
             using (var command = connection.CreateCommand())
             {
                 command.CommandText = sql;
-                command.Parameters.AddRange(parameters.ToArray());
+                command.Parameters.AddRange(parameters);
                 return (T)command.ExecuteScalar();
             }
         }
