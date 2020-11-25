@@ -6,8 +6,6 @@
     using System.Linq;
     using System.Reflection;
 
-    using Craig.Data.Extensions;
-
     /// <summary>
     /// The SQL Nanite.
     /// </summary>

@@ -1,13 +1,11 @@
-﻿namespace Craig.Data.Extensions
+﻿using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq;
+
+using static System.Reflection.BindingFlags;
+
+namespace System.Reflection
 {
-    using System;
-    using System.Collections.Generic;
-    using System.ComponentModel.DataAnnotations.Schema;
-    using System.Linq;
-    using System.Reflection;
-
-    using static System.Reflection.BindingFlags;
-
     /// <summary>
     /// The property info extension.
     /// </summary>

@@ -1,4 +1,4 @@
-﻿namespace SqlNaniteTest.Core30.Entities
+﻿namespace SqlNaniteTest.Entities
 {
     using System.ComponentModel.DataAnnotations;
     using System.ComponentModel.DataAnnotations.Schema;
@@ -12,7 +12,7 @@
         /// <summary>
         /// Gets or sets the index.
         /// </summary>
-        [Key, Column("Id")]
+        [Key, Column("NO")]
         public int Index { get; set; }
 
         /// <summary>
